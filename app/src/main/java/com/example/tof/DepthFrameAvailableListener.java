@@ -5,15 +5,21 @@ import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.media.Image;
 import android.media.ImageReader;
+import android.os.Environment;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.ShortBuffer;
 
 public class DepthFrameAvailableListener implements ImageReader.OnImageAvailableListener {
     private static final String TAG = DepthFrameAvailableListener.class.getSimpleName();
 
-    public static int WIDTH = 240;
-    public static int HEIGHT = 180;
+    // Juan: Note10+ ToF 해상
+    public static int WIDTH = 640;
+    public static int HEIGHT = 480;
 
     private static float RANGE_MIN = 200.0f;
     private static float RANGE_MAX = 1600.0f;
@@ -25,6 +31,8 @@ public class DepthFrameAvailableListener implements ImageReader.OnImageAvailable
     private int[] averagedMask;
     private int[] averagedMaskP2;
     private int[] blurredAverage;
+
+    public int logCount = 0;
 
     public DepthFrameAvailableListener(DepthFrameVisualizer depthFrameVisualizer) {
         this.depthFrameVisualizer = depthFrameVisualizer;
@@ -44,9 +52,9 @@ public class DepthFrameAvailableListener implements ImageReader.OnImageAvailable
             if (image != null && image.getFormat() == ImageFormat.DEPTH16) {
                 processImage(image);
                 publishRawData();
-                publishNoiseReduction();
-                publishMovingAverage();
-                publishBlurredMovingAverage();
+//                publishNoiseReduction();
+//                publishMovingAverage();
+//                publishBlurredMovingAverage();
             }
             image.close();
         }
@@ -88,6 +96,9 @@ public class DepthFrameAvailableListener implements ImageReader.OnImageAvailable
     }
 
     private void processImage(Image image) {
+        File depthFile;
+        FileOutputStream outputStream;
+
         ShortBuffer shortDepthBuffer = image.getPlanes()[0].getBuffer().asShortBuffer();
         int[] mask = new int[WIDTH * HEIGHT];
         int[] noiseReducedMask = new int[WIDTH * HEIGHT];
@@ -97,29 +108,50 @@ public class DepthFrameAvailableListener implements ImageReader.OnImageAvailable
                 short depthSample = shortDepthBuffer.get(index);
                 int newValue = extractRange(depthSample, CONFIDENCE_FILTER);
                 // Store value in the rawMask for visualization
+                // Juan: 상하좌우 반전시킴
+                index = (HEIGHT-y-1) * WIDTH + (WIDTH-x-1);
                 rawMask[index] = newValue;
 
-                int p1Value = averagedMask[index];
-                int p2Value = averagedMaskP2[index];
-                int avgValue = (newValue + p1Value + p2Value) / 3;
-                if (p1Value < 0 || p2Value < 0 || newValue < 0) {
-                    Log.d("TAG", "WHAT");
-                }
-                // Store the new moving average temporarily
-                mask[index] = avgValue;
+//                int p1Value = averagedMask[index];
+//                int p2Value = averagedMaskP2[index];
+//                int avgValue = (newValue + p1Value + p2Value) / 3;
+//                if (p1Value < 0 || p2Value < 0 || newValue < 0) {
+//                    Log.d("TAG", "WHAT");
+//                }
+//                // Store the new moving average temporarily
+//                mask[index] = avgValue;
             }
         }
-        // Produce a noise reduced version of the raw mask for visualization
-        System.arraycopy(rawMask, 0, noiseReducedMask, 0, rawMask.length);
-        noiseReduceMask = FastBlur.boxBlur(noiseReducedMask, WIDTH, HEIGHT, 1);
+        // 픽셀별 깊이정보를 csv 파일로 저장
+        logCount++;
+        if (logCount % 100 == 0) {
+            depthFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),
+                    "DEPTH_" + System.currentTimeMillis() + ".csv");
+            try {
+                outputStream = new FileOutputStream(depthFile, true);
+                outputStream.write(("x,y,depth\n").getBytes());
+                for (int i = 0; i < rawMask.length; i++) {
+                    outputStream.write((i/WIDTH + "," + i%WIDTH + "," + rawMask[i] + "\n").getBytes());
+                }
+                outputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-        // Remember the last two frames for moving average
-        averagedMaskP2 = averagedMask;
-        averagedMask = mask;
+            Log.i("Debug", "CSV Generated!");
+        }
 
-        // Produce a blurred version of the latest moving average result
-        System.arraycopy(averagedMask, 0, blurredAverage, 0, averagedMask.length);
-        blurredAverage = FastBlur.boxBlur(blurredAverage, WIDTH, HEIGHT, 1);
+//        // Produce a noise reduced version of the raw mask for visualization
+//        System.arraycopy(rawMask, 0, noiseReducedMask, 0, rawMask.length);
+//        noiseReduceMask = FastBlur.boxBlur(noiseReducedMask, WIDTH, HEIGHT, 1);
+//
+//        // Remember the last two frames for moving average
+//        averagedMaskP2 = averagedMask;
+//        averagedMask = mask;
+//
+//        // Produce a blurred version of the latest moving average result
+//        System.arraycopy(averagedMask, 0, blurredAverage, 0, averagedMask.length);
+//        blurredAverage = FastBlur.boxBlur(blurredAverage, WIDTH, HEIGHT, 1);
     }
 
     private int extractRange(short sample, float confidenceFilter) {
@@ -127,7 +159,9 @@ public class DepthFrameAvailableListener implements ImageReader.OnImageAvailable
         int depthConfidence = (short) ((sample >> 13) & 0x7);
         float depthPercentage = depthConfidence == 0 ? 1.f : (depthConfidence - 1) / 7.f;
         if (depthPercentage > confidenceFilter) {
-            return normalizeRange(depthRange);
+//            return normalizeRange(depthRange);
+            // Juan: 우선 0 to 255로 Normalize 하지 않고 그대로 리턴
+            return depthRange;
         } else {
             return 0;
         }

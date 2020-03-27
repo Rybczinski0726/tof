@@ -55,7 +55,8 @@ public class Camera extends CameraDevice.StateCallback {
             for (String camera : cameraManager.getCameraIdList()) {
                 CameraCharacteristics chars = cameraManager.getCameraCharacteristics(camera);
                 final int[] capabilities = chars.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
-                boolean facingFront = chars.get(CameraCharacteristics.LENS_FACING) == CameraMetadata.LENS_FACING_FRONT;
+                // Juan: 후방 카메라 선택
+                boolean facingFront = chars.get(CameraCharacteristics.LENS_FACING) == CameraMetadata.LENS_FACING_BACK;
                 boolean depthCapable = false;
                 for (int capability : capabilities) {
                     boolean capable = capability == CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_DEPTH_OUTPUT;

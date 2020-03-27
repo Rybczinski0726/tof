@@ -26,33 +26,33 @@
 
             <TextureView
                 android:id="@+id/rawData"
-                android:layout_width="180dp"
-                android:layout_height="240dp"
+                android:layout_width="480dp"
+                android:layout_height="640dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <TextureView
-                android:id="@+id/noiseReduction"
-                android:layout_width="180dp"
-                android:layout_height="240dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+<!--            <TextureView-->
+<!--                android:id="@+id/noiseReduction"-->
+<!--                android:layout_width="180dp"-->
+<!--                android:layout_height="240dp"-->
+<!--                app:layout_constraintEnd_toEndOf="parent"-->
+<!--                app:layout_constraintTop_toTopOf="parent" />-->
 
-            <TextureView
-                android:id="@+id/movingAverage"
-                android:layout_width="180dp"
-                android:layout_height="240dp"
-                android:layout_marginTop="10dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView3" />
+<!--            <TextureView-->
+<!--                android:id="@+id/movingAverage"-->
+<!--                android:layout_width="180dp"-->
+<!--                android:layout_height="240dp"-->
+<!--                android:layout_marginTop="10dp"-->
+<!--                app:layout_constraintStart_toStartOf="parent"-->
+<!--                app:layout_constraintTop_toBottomOf="@+id/textView3" />-->
 
-            <TextureView
-                android:id="@+id/blurredAverage"
-                android:layout_width="180dp"
-                android:layout_height="240dp"
-                android:layout_marginTop="10dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView5" />
+<!--            <TextureView-->
+<!--                android:id="@+id/blurredAverage"-->
+<!--                android:layout_width="180dp"-->
+<!--                android:layout_height="240dp"-->
+<!--                android:layout_marginTop="10dp"-->
+<!--                app:layout_constraintEnd_toEndOf="parent"-->
+<!--                app:layout_constraintTop_toBottomOf="@+id/textView5" />-->
 
             <TextView
                 android:id="@+id/textView3"

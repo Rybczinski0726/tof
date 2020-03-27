@@ -14,6 +14,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.io.File;
+
 /*  This is an example of getting and processing ToF data.
 
     This example will only work (correctly) on a device with a front-facing depth camera
@@ -23,6 +25,14 @@ import androidx.core.content.ContextCompat;
 public class MainActivity extends AppCompatActivity implements DepthFrameVisualizer {
     private static final String TAG = MainActivity.class.getSimpleName();
     public static final int CAM_PERMISSIONS_REQUEST = 0;
+
+    private static final int REQUEST_CAMERA_PERMISSIONS = 1;
+
+    private static final String[] CAMERA_PERMISSIONS = {
+            Manifest.permission.CAMERA,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+    };
 
     private TextureView rawDataView;
     private TextureView noiseReductionView;
@@ -46,9 +56,19 @@ public class MainActivity extends AppCompatActivity implements DepthFrameVisuali
     }
 
     private void checkCamPermissions() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAM_PERMISSIONS_REQUEST);
+        if (!hasAllPermissionsGranted()) {
+            ActivityCompat.requestPermissions(this, CAMERA_PERMISSIONS, CAM_PERMISSIONS_REQUEST);
         }
+    }
+
+    private boolean hasAllPermissionsGranted() {
+        for (String permission : CAMERA_PERMISSIONS) {
+            if (ActivityCompat.checkSelfPermission(this, permission)
+                    != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
